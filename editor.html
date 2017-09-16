@@ -1,0 +1,171 @@
+<html>
+
+	<style>
+	@font-face {
+	    font-family: "SFUI";
+	    src: url("fonts/SFUI/SFUIDisplay-Regular.woff");
+	}
+	@font-face {
+	    font-family: "SFUI";
+	    src: url("fonts/SFUI/SFUIDisplay-Light.woff");
+	    font-weight: light;
+	}
+	html{
+		font-family: SFUI;
+		font-weight: lighter;
+	}
+
+
+
+
+	.left-col{
+		background-color: #EFEFEF;
+		flex: .7; 
+		border-right: 1px solid #B4B4B4;
+	}
+	.window-title{
+		margin-top: -2px; 
+		background-color: #F9F9F9; 
+		height: 23px; 
+		width: 30%; 
+		border-radius: 5px;
+		box-shadow: 0px .6px 1px #B4B4B4;
+	}
+	.center{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.flex-column{
+		display: flex;
+		flex-direction: column;
+	}
+	#borderTop {
+	  border-left: 2px solid #f51c40;
+	  position: absolute;
+	  top: 90%;
+	  bottom: 0;
+	}
+	.element-option{
+		padding: 5px;
+		margin-left: 5px;
+		margin-right: 5px;
+		/*border-top:1px solid #B4B4B4;*/
+		border-bottom: 1px solid #B4B4B4;
+		margin-top: 5px;
+
+	}
+	.top-bar-grad{
+	    background: #EBEBEB; /* For browsers that do not support gradients */
+	    background: -webkit-linear-gradient(#EBEBEB, #D4D4D4); /* For Safari 5.1 to 6.0 */
+	    background: -o-linear-gradient(#EBEBEB, #D4D4D4); /* For Opera 11.1 to 12.0 */
+	    background: -moz-linear-gradient(#EBEBEB, #D4D4D4); /* For Firefox 3.6 to 15 */
+	    background: linear-gradient(#EBEBEB, #D4D4D4); /* Standard syntax */
+	}
+
+
+
+	.right-col{
+		background-color: #EFEFEF;
+		flex: .7;
+		display: flex;
+		flex-direction: column; border-left: 1px solid #B4B4B4;
+	}
+	.right-col-obj-lib{
+		border-bottom: 1px solid #B4B4B4;flex:.5;background-color: white;
+	}
+	.obj-desc-text{
+		display: inline-block; font-size: 12px; letter-spacing: .5px;
+	}
+	.html-canvas{
+		width: 500px;
+		height: 500px;
+		border: 1px solid #BDBDBD;
+		margin: auto;
+		margin-top: 10%;
+	}
+	.mid-col{
+		overflow: hidden;
+		background-color: white; flex: 2;
+	}
+	</style>
+	<body style="margin: 0px;display: flex;flex-direction: column;">
+		<div class="top-bar-grad" style="flex: .06;display: flex;flex-direction: row; background-color: #EFEFEF;border-bottom: 1px solid #B4B4B4;justify-content: center; align-items: center;">
+			<div class="window-title center"> <p style="font-size: 12px">HTML Editor</p></div>
+		</div>
+		<div style="flex: 1;display: flex;flex-direction: row;">
+
+			<div class="left-col"></div>
+
+			<div class="mid-col" >
+
+				<div class="html-canvas"></div>
+
+			</div>
+
+			<div class="right-col">
+				<div class="flex-column" style="border-bottom: 1px solid #B4B4B4;flex:.5;">
+					
+				</div>
+				<div class="flex-column right-col-obj-lib">
+					<div class="element-option">
+						<p class="obj-desc-text"><b>Div</b> - The &lt;div&gt; tag defines a division or a section in an HTML document.</p>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</body>
+
+
+<script>
+/*
+clicked = false;
+var x ;//= event.clientX;     // Get the horizontal coordinate
+var y ;
+container = document.getElementsByTagName('body')[0];
+
+window.addEventListener("mousedown", (event) => {
+	clicked = true;
+	x = event.clientX;     // Get the horizontal coordinate
+	y = event.clientY;
+	container.insertAdjacentHTML('beforeend', `<div id="selection"></div>`)
+});
+
+
+window.addEventListener("mouseup", () => {
+	clicked = false;
+	newX = event.clientX;     // Get the horizontal coordinate
+	newY = event.clientY;
+	selection = document.getElementById('selection');
+	selection.remove();
+	//container.insertAdjacentHTML('beforeend', `<div onclick="check(this)" style="width:${newX - x}px; height:${newY-y}px; background-color:blue; margin-left: ${x}px"></div>`);
+
+	container.insertAdjacentHTML('beforeend', `<div style="width:${newX - x}px; height:${newY-y}px; border: 1px dashed black; position: absolute; left: ${x}px; top: ${y}px"></div>`);
+
+});
+
+
+window.addEventListener("mousemove", (event) => {
+	if(clicked){
+		newX = event.clientX;     // Get the horizontal coordinate
+		newY = event.clientY;
+		selection = document.getElementById('selection');
+
+		//selection.innerHTML = `<div style="width:${newX - x}px; height:${newY-y}px; border: 1px dashed black; margin-left: ${x}px"></div>`;
+
+		selection.innerHTML = `<div style="width:${newX - x}px; height:${newY-y}px; border: 1px dashed black; position: absolute; left: ${x}px; top: ${y}px"></div>`;
+		//		<h1>X:${x}</h1> <h1>Y:${y}</h1>
+		//
+	}
+})
+
+function check(el){
+	el.style.border = "1px solid red"
+	debugger;
+}
+*/
+</script>
+
+</html>
