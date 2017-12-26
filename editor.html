@@ -1,6 +1,13 @@
 <html>
 
+
+
 	<style>
+	/*
+		have a selected boundingBox global, along with a selected element
+
+		Maybe have a global event object generated when the mouse down is triggered for an element. Use targeted functions in window mouse move to trigger stuff from the event. Same with window mouse up (disable event).
+	*/
 	@font-face {
 	    font-family: "SFUI";
 	    src: url("fonts/SFUI/SFUIDisplay-Regular.woff");
@@ -10,6 +17,13 @@
 	    src: url("fonts/SFUI/SFUIDisplay-Light.woff");
 	    font-weight: light;
 	}
+	@font-face {
+	    font-family: "SFUI";
+	    src: url("fonts/SFUI/sfuidisplay-bold-webfont.woff");
+	    font-weight: bold;
+	}
+
+	
 	html{
 		font-family: SFUI;
 		font-weight: lighter;
@@ -75,9 +89,9 @@
 		border-bottom: 1px solid #B4B4B4;flex:.5;background-color: white;
 	}
 	.obj-desc-text{
-		display: inline-block; font-size: 12px; letter-spacing: .5px;
+		display: inline-block; font-size: 11px; letter-spacing: .5px;
 	}
-	.html-canvas{
+	#html-canvas{
 		width: 500px;
 		height: 500px;
 		border: 1px solid #BDBDBD;
@@ -99,7 +113,7 @@
 
 			<div class="mid-col" >
 
-				<div class="html-canvas"></div>
+				<div id="html-canvas"></div>
 
 			</div>
 
@@ -109,40 +123,76 @@
 				</div>
 				<div class="flex-column right-col-obj-lib">
 					<div class="element-option">
-						<p class="obj-desc-text"><b>Div</b> - The &lt;div&gt; tag defines a division or a section in an HTML document.</p>
+						<p class="obj-desc-text"><b style="font-weight: bold; font-size: 12px;">Div</b> - The &lt;div&gt; tag defines a division or a section in an HTML document.</p>
 					</div>
 				</div>
 			</div>
 
 		</div>
 
+		<div id="selection" style="position: absolute; flex: 1">
+		</div>
+
 	</body>
 
 
 <script>
-/*
+var moving = false;
+var movingClickX
+var movingClickY;
+
+var resizing = false;
+var selectedBoundChanger;
+var pSelectedBoundChanger;
+var selected = null;
+
+
 clicked = false;
 var x ;//= event.clientX;     // Get the horizontal coordinate
 var y ;
-container = document.getElementsByTagName('body')[0];
+container = document.getElementById('html-canvas');// document.getElementsByTagName('body')[0];
+var selecting = false;
+
+
 
 window.addEventListener("mousedown", (event) => {
+	if (!event.shiftKey) {
+	 	return;
+	 }
+	if(selecting){
+		selecting = false;
+		return;
+	}
 	clicked = true;
 	x = event.clientX;     // Get the horizontal coordinate
 	y = event.clientY;
-	container.insertAdjacentHTML('beforeend', `<div id="selection"></div>`)
+	//container.insertAdjacentHTML('beforeend', `<div id="selection"></div>`)
 });
 
 
 window.addEventListener("mouseup", () => {
+	if (clicked) {
+
 	clicked = false;
+	if(selecting)
+		return;
 	newX = event.clientX;     // Get the horizontal coordinate
 	newY = event.clientY;
 	selection = document.getElementById('selection');
-	selection.remove();
+	selection.innerHTML = "";
+	//selection.remove();
 	//container.insertAdjacentHTML('beforeend', `<div onclick="check(this)" style="width:${newX - x}px; height:${newY-y}px; background-color:blue; margin-left: ${x}px"></div>`);
 
-	container.insertAdjacentHTML('beforeend', `<div style="width:${newX - x}px; height:${newY-y}px; border: 1px dashed black; position: absolute; left: ${x}px; top: ${y}px"></div>`);
+
+	container.insertAdjacentHTML('beforeend', `<div onmousedown="onDivMouseDown(this)" style="width:100px; height:100px; border: 1px solid #95A8FF; position: absolute; left: ${newX}px; top: ${newY}px"></div>`);
+
+}
+
+	
+		if(resizing){
+			resizing = false;
+		}
+		moving = false;
 
 });
 
@@ -155,17 +205,124 @@ window.addEventListener("mousemove", (event) => {
 
 		//selection.innerHTML = `<div style="width:${newX - x}px; height:${newY-y}px; border: 1px dashed black; margin-left: ${x}px"></div>`;
 
-		selection.innerHTML = `<div style="width:${newX - x}px; height:${newY-y}px; border: 1px dashed black; position: absolute; left: ${x}px; top: ${y}px"></div>`;
+		selection.innerHTML = `<div style="width:100px; height:100px; border: 1px solid rgba(149,168, 255, .5); position: absolute; left: ${newX}px; top: ${newY}px"></div>`;
 		//		<h1>X:${x}</h1> <h1>Y:${y}</h1>
 		//
 	}
+
+	if(event.shiftKey && resizing){
+		
+		var el = selectedBoundChanger;
+
+		var parent = pSelectedBoundChanger;// el.parentElement;
+		var pRect = parent.getBoundingClientRect();
+
+		newX = event.clientX;     // Get the horizontal coordinate
+		
+		newY = event.clientY;
+
+		console.log("RIGH: " + pRect.right);
+
+
+		//.right takes border into account, use pRect.left + parent.style.width
+		var right = pRect.left + parent.clientWidth;
+		parent.style.width = (right - newX) + "px";
+		pRect = parent.getBoundingClientRect();
+		parent.style.left = newX;
+
+		redrawBoundingBox(parent);
+
+		//el.style.left = newX;
+	}
+
+	if(moving){
+
+		//selected is changing to reflect new change sbut is also accumulated last changes which is also done in this calc
+		newX = selected.offsetLeft + (event.clientX - movingClickX);     // Get the horizontal coordinate
+		
+		newY = selected.offsetTop + (event.clientY - movingClickY);
+
+		movingClickX = event.clientX;
+		movingClickY = event.clientY;
+
+		selected.style.left = newX + "px";
+		selected.style.top = newY + "px";
+	}
 })
 
-function check(el){
-	el.style.border = "1px solid red"
-	debugger;
+function onDivMouseDown(el){
+
+	if( (event.target == el) != true)
+		return;
+
+	selecting = true;
+
+	selected = el;
+	moving = true;
+	movingClickX = event.clientX;
+	movingClickY = event.clientY;
+
+	el.style.border = "1px solid red";
+
+	//DEBUG
+	//console.log(rect.top, rect.right, rect.bottom, rect.left);
+
+	redrawBoundingBox(el);
+
+
+
+
 }
-*/
+
+function c2(el){
+	
+	var parent = el.parentElement;
+
+	selectedBoundChanger = el;
+	pSelectedBoundChanger = parent;
+	resizing = true;
+	
+}
+
+function moveBound(el){
+	if(el.getAttribute('clicked') == 'false'){
+		return;
+	}
+	var parent = el.parentElement;
+	newX = event.clientX - parseInt(parent.style.left.substring(0,parent.style.left.length - 2)) - 4;     // Get the horizontal coordinate
+	
+	newY = event.clientY;
+	el.style.left = newX;
+}
+
+function redrawBoundingBox(selectedDiv){
+	debugger;
+	var rect = selectedDiv.getBoundingClientRect();
+	var height = 6;
+	var width = 6;
+	var boundingStyle = `width:${width}px; height:${height}px; border: 1px solid black; background-color: rgba(255,255,255,.5);position: absolute;`;
+
+	let leftMarkerPos = -width/2 - 1;
+	let rightMarkerPos = leftMarkerPos + rect.width;
+	let sideMarkerTopPos = (rect.bottom - rect.top)/2 - height/2;
+
+
+	selectedDiv.innerHTML = "";
+
+	/*Left marker*/
+	selectedDiv.innerHTML += `<div onmousedown="c2(this)" clicked="false" style="${boundingStyle} left: ${leftMarkerPos}px; top: ${ (rect.bottom - rect.top)/2 - height/2 }px"></div>`;
+
+	/*Right marker*/
+	selectedDiv.innerHTML += `<div style="${boundingStyle} left: ${rightMarkerPos}px; top: ${sideMarkerTopPos}px"></div>`;
+
+	/*Top marker*/
+	selectedDiv.innerHTML += `<div style="${boundingStyle} left: ${rightMarkerPos/2}px; top: ${-height/2}px"></div>`;
+
+	
+	/*Bottom marker*/
+	selectedDiv.innerHTML += `<div style="${boundingStyle} left: ${rightMarkerPos/2}px; top: ${rect.height-height/2}px"></div>`;
+}
+
 </script>
 
 </html>

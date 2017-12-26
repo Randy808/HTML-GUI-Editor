@@ -1,0 +1,31 @@
+function main(root){
+	if(root == null){
+		return 0;
+	}
+
+	var val = root.val;
+
+	return findPath(val,root, count);
+
+}
+
+function findPath(val, root, count){
+	if(root == null)
+		return 0;
+
+	if(val == root.val)
+		count++;
+	else
+		count = 0;
+
+	var leftCount = findPath(root.val, root.left, count);
+	var rightCount = findPath(root.val, root.right, count);
+	
+	if(left > count)
+		count = left;
+
+	if(right > count)
+		count = right;
+
+	return count;
+}
