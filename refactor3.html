@@ -1,0 +1,377 @@
+<html>
+	<style>
+	/*
+		have a selected boundingBox global, along with a selected element
+
+		Maybe have a global event object generated when the mouse down is triggered for an element. Use targeted functions in window mouse move to trigger stuff from the event. Same with window mouse up (disable event).
+	*/
+	@font-face {
+	    font-family: "SFUI";
+	    src: url("fonts/SFUI/SFUIDisplay-Regular.woff");
+	}
+	@font-face {
+	    font-family: "SFUI";
+	    src: url("fonts/SFUI/SFUIDisplay-Light.woff");
+	    font-weight: light;
+	}
+	@font-face {
+	    font-family: "SFUI";
+	    src: url("fonts/SFUI/sfuidisplay-bold-webfont.woff");
+	    font-weight: bold;
+	}
+
+	
+	html{
+		font-family: SFUI;
+		font-weight: lighter;
+	}
+	.left-col{
+		background-color: #EFEFEF;
+		flex: .7; 
+		border-right: 1px solid #B4B4B4;
+	}
+	.window-title{
+		margin-top: -2px; 
+		background-color: #F9F9F9; 
+		height: 23px; 
+		width: 30%; 
+		border-radius: 5px;
+		box-shadow: 0px .6px 1px #B4B4B4;
+	}
+	.center{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.flex-column{
+		display: flex;
+		flex-direction: column;
+	}
+	#borderTop {
+	  border-left: 2px solid #f51c40;
+	  position: absolute;
+	  top: 90%;
+	  bottom: 0;
+	}
+	.element-option{
+		padding: 5px;
+		margin-left: 5px;
+		margin-right: 5px;
+		/*border-top:1px solid #B4B4B4;*/
+		border-bottom: 1px solid #B4B4B4;
+		margin-top: 5px;
+
+	}
+	.top-bar-grad{
+	    background: #EBEBEB; /* For browsers that do not support gradients */
+	    background: -webkit-linear-gradient(#EBEBEB, #D4D4D4); /* For Safari 5.1 to 6.0 */
+	    background: -o-linear-gradient(#EBEBEB, #D4D4D4); /* For Opera 11.1 to 12.0 */
+	    background: -moz-linear-gradient(#EBEBEB, #D4D4D4); /* For Firefox 3.6 to 15 */
+	    background: linear-gradient(#EBEBEB, #D4D4D4); /* Standard syntax */
+	}
+
+
+
+	.right-col{
+		background-color: #EFEFEF;
+		flex: .7;
+		display: flex;
+		font-size: 12px;
+		flex-direction: column; border-left: 1px solid #B4B4B4;
+	}
+	.right-col-obj-lib{
+		border-bottom: 1px solid #B4B4B4;flex:.5;background-color: white;
+	}
+	.obj-desc-text{
+		display: inline-block; font-size: 11px; letter-spacing: .5px;
+	}
+	#html-canvas{
+		width: 500px;
+		height: 500px;
+		border: 1px solid #BDBDBD;
+		margin: auto;
+		margin-top: 10%;
+		position: relative;
+		overflow-x: hidden;
+		overflow-y: hidden;
+	}
+	.mid-col{
+		overflow: hidden;
+		background-color: white; flex: 2;
+	}
+	.cover{
+		display: block;
+		position: absolute;
+		height: 100%;
+		width: 100%;
+		left: 0px;
+		top: 0px;
+	}
+	.box{
+		width: 100px;
+		height: 100px;
+		border: 2px solid blue;
+		position: absolute;
+		padding: 20px;
+	}
+	#div{
+		cursor: pointer;
+		position: relative;
+	}
+	.div{
+		width: 100px;
+		height: 100px;
+		border: 1px solid #95A8FF;
+	}
+	</style>
+	<body style="margin: 0px;display: flex;flex-direction: column;">
+		<div class="top-bar-grad" style="flex: .06;display: flex;flex-direction: row; background-color: #EFEFEF;border-bottom: 1px solid #B4B4B4;justify-content: center; align-items: center;">
+			<div class="window-title center"> <p style="font-size: 12px">HTML Editor</p></div>
+		</div>
+		<div style="flex: 1;display: flex;flex-direction: row;">
+
+			<div class="left-col"></div>
+
+			<div class="mid-col" >
+
+				<div id="html-canvas">
+					<div class="box" ></div>
+
+				</div>
+
+			</div>
+
+			<div class="right-col">
+				<div id="stylebar" class="flex-column" style="border-bottom: 1px solid #B4B4B4;flex:.5;">
+					<p>
+						<b style="font-weight: bold; font-size: 11.5px; margin-left: 10px">Div</b>
+					</p>
+					<div style="margin-left: 15px">
+						<p>background color:</p>
+						<input type="text" name="" oninput="changeSelectedDivBackground(this)"></input>
+					</div>
+				</div>
+				<div class="flex-column right-col-obj-lib">
+					<div class="element-option" id="div">
+						<div class="cover"></div>
+						<p class="obj-desc-text" ><b style="font-weight: bold;">Div</b> - The &lt;div&gt; tag defines a division or a section in an HTML document.</p>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<div id="selection" style="position: absolute; flex: 1">
+		</div>
+
+	</body>
+
+
+<script>
+
+class EventPipeline{
+	constructor(window){
+		this.middlewares = [];
+		window.addEventListener("mousedown", e => this.Invoke(e));
+		window.addEventListener("mousemove", e => this.Invoke(e));
+		window.addEventListener("mouseup", e => this.Invoke(e));
+	}
+
+	UseMiddleware(middleware){
+		this.middlewares.push(new middleware());
+	}
+
+	Invoke(event){
+		for(var i = 0 ; i < this.middlewares.length ; i++){
+			this.middlewares[i].Invoke(event);
+		}
+	}
+}
+
+var Enums = {
+	"CREATING" : 0,
+	"SELECTING" : 1,
+	"MOVING" : 2,
+	"RESIZING" : 3,
+	"DESELECTING": 4
+};
+
+class IntentParser{
+
+	constructor(){
+		this.lastIntent = null;
+		this.mousedown = false;
+	}
+
+	Invoke(event){
+		
+		if(event.type == "mouseup"){
+			this.mousedown = false;
+		}
+
+		if(event.type == "mousedown"){
+
+			this.mousedown = true;
+
+			if(this.OnPanel(event)){
+				event.parsedEvent = Enums.CREATING;
+			}
+			else if(this.OnMarker(event)){
+				event.parsedEvent = Enums.RESIZING;
+			}
+			else if(this.OnDiv(event)){
+				event.parsedEvent = Enums.SELECTING;
+			}
+		}
+		else if(event.type == "mousemove" && this.mousedown){
+			if(this.lastIntent == Enums.CREATING ||
+				this.lastIntent == Enums.SELECTING ||
+				this.lastIntent == Enums.MOVING){
+
+				event.parsedEvent = Enums.MOVING;
+			}
+		}
+
+		this.lastIntent = event.parsedEvent;
+		return;
+	}
+
+	OnPanel(event){
+		return event &&
+			event.target.className == "cover";
+	}
+
+	OnDiv(event){
+		return event &&
+			event.target.localName == "div";
+	}
+
+	OnMarker(event){
+		return;
+	}
+		/*
+		if(move){
+			event = moving
+		}
+
+		if()
+			*/
+}
+
+class ElementHandler{
+
+	constructor(){
+		this.divs = {};
+		this.divCount = 0;
+		this.lastDiv = null;
+
+
+		this.HandleMoving = this.HandleMoving.bind(this);
+		this.HandleCreation = this.HandleCreation.bind(this);
+		this.HandleSelect = this.HandleSelect.bind(this);
+		this.ShowRedOutline = this.ShowRedOutline.bind(this);
+	}
+	Invoke(event){
+
+		//check for deselect
+
+
+		if(event.parsedEvent == Enums.CREATING){
+			return this.HandleCreation(event);
+		}
+
+
+		if(event.parsedEvent == Enums.SELECTING){
+			var div = GetDiv(event.target);
+			this.lastDiv = div;
+			return this.HandleSelect(event);
+		}
+
+		
+
+		if(event.parsedEvent == Enums.MOVING){
+
+			if(!this.lastDiv){
+				var div = GetDiv(event.target);
+				if(div == null){
+					return;
+				}
+				
+				this.lastDiv = div;
+			}
+
+			return this.HandleMoving(event);
+		}
+
+		this.lastDiv = null;
+	}
+	
+	HandleMoving(event){
+		
+
+		var div = this.lastDiv;
+		div.style.left = event.clientX - 78;
+		div.style.top = event.clientY - 78;
+		return;
+		ShowRedOutline();
+		ShowBoundingBox();
+	}
+
+	HandleSelect(event){
+		debugger;
+		this.ShowRedOutline();
+		return;
+		ShowBoundingBox();
+	}
+
+	ShowRedOutline(){
+		var selectedDiv = this.lastDiv;
+		selectedDiv.style.border = "1px solid red";
+	}
+	
+
+	HandleCreation(event){
+		var newX = event.clientX;     // Get the horizontal coordinate
+		var newY = event.clientY;
+		var div = document.createElement("div");
+		div.style.width = "100px";
+		div.style.height = "100px";
+		div.style.border = "1px solid blue";
+		div.style.position = "absolute";
+		div.style.top = (newY - 18) + "px";
+		div.style.left = (newX - 18)  + "px";
+
+		var id = this.divCount++;
+		this.divs[id] = div;
+
+		div.setAttribute("id", "1");
+		div.className = "div";
+		document.body.appendChild(div);
+		
+		return;
+	}
+}
+
+function GetDiv(element){
+	if(!element){
+		return null;
+	}
+
+	if(element.className.indexOf("div") != -1){
+		
+		return element;
+	}
+
+	return GetDiv(element.parent);
+}
+
+var app = new EventPipeline(window);
+app.UseMiddleware(IntentParser);
+app.UseMiddleware(ElementHandler);
+//app.UseMiddleware(CircularDivHandler);
+//app.UseMiddleware(H1Handler);
+
+
+</script>
+
+</html>

@@ -110,6 +110,13 @@
 		left: 0px;
 		top: 0px;
 	}
+	.box{
+		width: 100px;
+		height: 100px;
+		border: 5px solid blue;
+		position: absolute;
+		padding: 20px;
+	}
 	</style>
 	<body style="margin: 0px;display: flex;flex-direction: column;">
 		<div class="top-bar-grad" style="flex: .06;display: flex;flex-direction: row; background-color: #EFEFEF;border-bottom: 1px solid #B4B4B4;justify-content: center; align-items: center;">
@@ -121,7 +128,9 @@
 
 			<div class="mid-col" >
 
-				<div id="html-canvas"></div>
+				<div id="html-canvas">
+					<div class="box" onclick="hi()" onmousedown="bye()"></div>
+				</div>
 
 			</div>
 
@@ -136,14 +145,8 @@
 					</div>
 				</div>
 				<div class="flex-column right-col-obj-lib">
-					<div class="element-option" id="div-creator">
-						<!--<div class="cover"></div>-->
+					<div class="element-option" id="div">
 						<p class="obj-desc-text" ><b style="font-weight: bold;">Div</b> - The &lt;div&gt; tag defines a division or a section in an HTML document.</p>
-					</div>
-
-					<div class="element-option" id="text-creator">
-						<!--<div class="cover"></div>-->
-						<p class="obj-desc-text" ><b style="font-weight: bold;">Text</b> - The &lt;div&gt; tag defines a division or a section in an HTML document.</p>
 					</div>
 				</div>
 			</div>
@@ -156,7 +159,60 @@
 	</body>
 
 
-<script src="editor.js">
+<script>
+
+
+	let hi = () => console.log("hi");
+	let bye = () => console.log("bye");
+var moving = false;
+var movingClickX
+var movingClickY;
+
+var resizing = false;
+var selectedBoundChanger;
+var pSelectedBoundChanger;
+var selected = null;
+
+
+/*
+
+To make a new div:
+
+-click down on page with shift (if we took the shift out, it would trigger the move of a div)
+-trigger window listener for mouse down and make creating true
+-on mouse move, 'creating' means we're making a new div and it changes our temp div fslection to show a div
+-On mouse up, creating sets the temp devi to nothing, and makes a new div at that position
+
+
+*/
+creating = false;
+var x ;//= event.clientX;     // Get the horizontal coordinate
+var y ;
+container = document.getElementById('html-canvas');// document.getElementsByTagName('body')[0];
+var selecting = false;
+
+
+
+//on shift mouse down
+var move = (el) => {
+
+let containerX = container.getBoundingClientRect().x;
+	let containerY = container.getBoundingClientRect().y;
+
+	var newX = el.offsetLeft + (event.clientX - movingClickX);     // Get the horizontal coordinate
+	var newY = el.offsetTop + (event.clientY - movingClickY);
+
+	
+
+	console.log("X: " + event.clientX);
+	el.style.left = event.clientX - containerX ;
+	el.style.top = event.clientY - containerY;
+};
+
+let noti = ()=> {
+	console.log(event.clientX);
+}
+
 </script>
 
 </html>

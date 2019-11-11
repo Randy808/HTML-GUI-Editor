@@ -1,0 +1,432 @@
+<html>
+	<style>
+	/*
+		have a selected boundingBox global, along with a selected element
+
+		Maybe have a global event object generated when the mouse down is triggered for an element. Use targeted functions in window mouse move to trigger stuff from the event. Same with window mouse up (disable event).
+	*/
+	@font-face {
+	    font-family: "SFUI";
+	    src: url("fonts/SFUI/SFUIDisplay-Regular.woff");
+	}
+	@font-face {
+	    font-family: "SFUI";
+	    src: url("fonts/SFUI/SFUIDisplay-Light.woff");
+	    font-weight: light;
+	}
+	@font-face {
+	    font-family: "SFUI";
+	    src: url("fonts/SFUI/sfuidisplay-bold-webfont.woff");
+	    font-weight: bold;
+	}
+
+	
+	html{
+		font-family: SFUI;
+		font-weight: lighter;
+	}
+	.left-col{
+		background-color: #EFEFEF;
+		flex: .7; 
+		border-right: 1px solid #B4B4B4;
+	}
+	.window-title{
+		margin-top: -2px; 
+		background-color: #F9F9F9; 
+		height: 23px; 
+		width: 30%; 
+		border-radius: 5px;
+		box-shadow: 0px .6px 1px #B4B4B4;
+	}
+	.center{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.flex-column{
+		display: flex;
+		flex-direction: column;
+	}
+	#borderTop {
+	  border-left: 2px solid #f51c40;
+	  position: absolute;
+	  top: 90%;
+	  bottom: 0;
+	}
+	.element-option{
+		padding: 5px;
+		margin-left: 5px;
+		margin-right: 5px;
+		/*border-top:1px solid #B4B4B4;*/
+		border-bottom: 1px solid #B4B4B4;
+		margin-top: 5px;
+
+	}
+	.top-bar-grad{
+	    background: #EBEBEB; /* For browsers that do not support gradients */
+	    background: -webkit-linear-gradient(#EBEBEB, #D4D4D4); /* For Safari 5.1 to 6.0 */
+	    background: -o-linear-gradient(#EBEBEB, #D4D4D4); /* For Opera 11.1 to 12.0 */
+	    background: -moz-linear-gradient(#EBEBEB, #D4D4D4); /* For Firefox 3.6 to 15 */
+	    background: linear-gradient(#EBEBEB, #D4D4D4); /* Standard syntax */
+	}
+
+
+
+	.right-col{
+		background-color: #EFEFEF;
+		flex: .7;
+		display: flex;
+		font-size: 12px;
+		flex-direction: column; border-left: 1px solid #B4B4B4;
+	}
+	.right-col-obj-lib{
+		border-bottom: 1px solid #B4B4B4;flex:.5;background-color: white;
+	}
+	.obj-desc-text{
+		display: inline-block; font-size: 11px; letter-spacing: .5px;
+	}
+	#html-canvas{
+		width: 500px;
+		height: 500px;
+		border: 1px solid #BDBDBD;
+		margin: auto;
+		margin-top: 10%;
+		position: relative;
+		overflow-x: hidden;
+		overflow-y: hidden;
+	}
+	.mid-col{
+		overflow: hidden;
+		background-color: white; flex: 2;
+	}
+	.cover{
+		display: block;
+		position: absolute;
+		height: 100%;
+		width: 100%;
+		left: 0px;
+		top: 0px;
+	}
+	.box{
+		width: 100px;
+		height: 100px;
+		border: 2px solid blue;
+		position: absolute;
+		padding: 20px;
+	}
+	#div{
+		cursor: pointer;
+		position: relative;
+	}
+	.div{
+		width: 100px;
+		height: 100px;
+		border: 1px solid #95A8FF;
+	}
+	</style>
+	<body style="margin: 0px;display: flex;flex-direction: column;">
+		<div class="top-bar-grad" style="flex: .06;display: flex;flex-direction: row; background-color: #EFEFEF;border-bottom: 1px solid #B4B4B4;justify-content: center; align-items: center;">
+			<div class="window-title center"> <p style="font-size: 12px">HTML Editor</p></div>
+		</div>
+		<div style="flex: 1;display: flex;flex-direction: row;">
+
+			<div class="left-col"></div>
+
+			<div class="mid-col" >
+
+				<div id="html-canvas">
+					<div class="box" onmousedown="Div.mousedown(this)"></div>
+
+				</div>
+
+			</div>
+
+			<div class="right-col">
+				<div id="stylebar" class="flex-column" style="border-bottom: 1px solid #B4B4B4;flex:.5;">
+					<p>
+						<b style="font-weight: bold; font-size: 11.5px; margin-left: 10px">Div</b>
+					</p>
+					<div style="margin-left: 15px">
+						<p>background color:</p>
+						<input type="text" name="" oninput="changeSelectedDivBackground(this)"></input>
+					</div>
+				</div>
+				<div class="flex-column right-col-obj-lib">
+					<div class="element-option" id="div" onmousedown="DivCreator.mousedown(this)">
+						<div class="cover"></div>
+						<p class="obj-desc-text" ><b style="font-weight: bold;">Div</b> - The &lt;div&gt; tag defines a division or a section in an HTML document.</p>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<div id="selection" style="position: absolute; flex: 1">
+		</div>
+
+	</body>
+
+
+<script>
+var moving = false;
+var movingClickX
+var movingClickY;
+
+var resizing = false;
+var selectedBoundChanger;
+var pSelectedBoundChanger;
+var selected = null;
+
+
+/*
+
+To make a new div:
+
+-click down on page with shift (if we took the shift out, it would trigger the move of a div)
+-trigger window listener for mouse down and make creating true
+-on mouse move, 'creating' means we're making a new div and it changes our temp div fslection to show a div
+-On mouse up, creating sets the temp devi to nothing, and makes a new div at that position
+
+
+*/
+creating = false;
+var x ;//= event.clientX;     // Get the horizontal coordinate
+var y ;
+var selecting = false;
+
+class Div{
+	static constructor(){
+		this.container = document.getElementById('html-canvas');
+		this.x = 0;
+		this.y = 0;
+
+		this.selected = false;
+	}
+	static mousedown(el){
+		//This will cover the mousedowns for the Divs
+		//mosuedowns indicate selecting or moving. 
+		//When moving, it must be selected.
+		if(this.selected){
+			debugger;
+			this.selected.style.border = "1px solid blue";
+		}
+		Div.select(el.target);
+
+	}
+	static select(el){
+		debugger;
+		this.selected = el;
+		el.style.border = "2px solid red";
+		redrawBoundingBox(el);
+
+	}
+	static mouseMoveListener(event){
+		//if creating is true, we're making a new div
+		if(creating){
+			newX = event.clientX;     // Get the horizontal coordinate
+			newY = event.clientY;
+			selection = document.getElementById('selection');
+			selection.innerHTML = `<div style="width:100px; height:100px; border: 1px solid rgba(149,168, 255, .5); position: absolute; left: ${newX}px; top: ${newY}px"></div>`;
+		}
+		if(resizing){
+			debugger;
+			resizeDiv(event);
+		}
+		//can only be moving from a 'onDivMouseDown' triggered function on a div mouse down 
+		if(moving){
+			moveDiv();
+		}
+	}
+}
+
+class DivCreator{
+	static constructor(){
+		this.creating = false;
+		this.container = document.getElementById('html-canvas');
+	}
+	static mousedown(el){
+		//This will cover the mousedowns for the Divs
+		//mosuedowns indicate selecting or moving. 
+		//When moving, it must be selected.
+		console.log("md");
+		this.creating = true;
+
+	}
+	static mouseMoveListener(event){
+		//if creating is true, we're making a new div
+		if(this.creating){
+			let newX = event.clientX;     // Get the horizontal coordinate
+			let newY = event.clientY;
+			let selection = document.getElementById('selection');
+			selection.innerHTML = `<div style="width:100px; height:100px; border: 1px solid rgba(149,168, 255, .5); position: absolute; left: ${newX}px; top: ${newY}px"></div>`;
+		}
+	}
+	static mouseUpListener(event){
+		if (this.creating) {
+
+			this.creating = false;
+			let newX = event.clientX;     // Get the horizontal coordinate
+			let newY = event.clientY;
+			let selection = document.getElementById('selection');
+			selection.innerHTML = "";
+
+			let containerX = this.container.getBoundingClientRect().x;
+			let containerY = this.container.getBoundingClientRect().y;
+
+			let div = document.createElement("div");
+			div.onmousedown = Div.mousedown;
+			div.classList.add("div");
+			div.style.position = "absolute";
+			div.style.left = newX - containerX;
+			div.style.top = newY - containerY;
+
+
+			//containerX and containerY are offsets of the global position to make the div appear in the same place from relative positioning inside the canvas
+			this.container.insertAdjacentElement('beforeend', div);
+		}
+	}
+}
+
+class ResizeMarkers{
+	static selectBound(){
+
+	}
+}
+
+Div.constructor();
+DivCreator.constructor();
+//on shift mouse down
+window.addEventListener("mousedown", (event) => {
+	//DivCreator.mouseUpListener(event);
+});
+
+
+window.addEventListener("mouseup", (event) => {
+	DivCreator.mouseUpListener(event);
+});
+
+
+window.addEventListener("mousemove", (event) => {
+	DivCreator.mouseMoveListener(event);
+	
+})
+
+function moveDiv(){
+	//selected is changing to reflect new changes but is also accumulated last changes which is also done in this calc
+	newX = selected.offsetLeft + (event.clientX - movingClickX);     // Get the horizontal coordinate
+	newY = selected.offsetTop + (event.clientY - movingClickY);
+
+	movingClickX = event.clientX;
+	movingClickY = event.clientY;
+
+	selected.style.left = newX + "px";
+	selected.style.top = newY + "px";
+}
+function onDivMouseDown(el){
+
+	if( (event.target == el) != true)
+		return;
+
+	selecting = true;
+
+	selected = el;
+	moving = true;
+	movingClickX = event.clientX;
+	movingClickY = event.clientY;
+	el.style.border = "1px solid red";
+	redrawBoundingBox(el);
+}
+
+function selectBound(el){
+	debugger;
+	console.log("STOP PROPAGATION");
+	event.stopPropagation();
+	var parent = el.parentElement;
+
+	selectedBoundChanger = el;
+	pSelectedBoundChanger = parent;
+	resizing = true;
+	
+}
+
+function moveBound(el){
+	if(el.getAttribute('creating') == 'false'){
+		return;
+	}
+	var parent = el.parentElement;
+	newX = event.clientX - parseInt(parent.style.left.substring(0,parent.style.left.length - 2)) - 4;     // Get the horizontal coordinate
+	
+	newY = event.clientY;
+	el.style.left = newX;
+}
+
+function resizeDiv(event){
+	debugger;
+
+	var el = selectedBoundChanger;
+
+		var parent = pSelectedBoundChanger;// el.parentElement;
+		var pRect = parent.getBoundingClientRect();
+
+		let containerX = container.getBoundingClientRect().x + 1;
+		let containerY = container.getBoundingClientRect().y;
+
+		newX = event.clientX - containerX;     // Get the horizontal coordinate
+		
+		newY = event.clientY - containerY;
+
+
+		console.log("RIGH: " + pRect.right);
+
+
+		
+		//.right takes border into account, use pRect.left + parent.style.width.
+		//We subtract containerX beacause the bounding box of the div gets things relative to the whole page rather than relative to the 'html-canvas'
+		//USE CLIENT WIDTH because borders mess width calculations up
+		var right = pRect.left + parent.clientWidth - containerX;
+		debugger;
+		parent.style.width = (right - newX) + "px";
+		pRect = parent.getBoundingClientRect();
+		parent.style.left = newX;
+
+		redrawBoundingBox(parent);
+}
+
+function redrawBoundingBox(selectedDiv){
+	debugger;
+	var rect = selectedDiv.getBoundingClientRect();
+	var height = 6;
+	var width = 6;
+	var boundingStyle = `width:${width}px; height:${height}px; border: 1px solid black; background-color: rgba(255,255,255,.5);position: absolute;`;
+
+	let leftMarkerPos = -width/2;
+	var rectBorder = 1;
+	var halfOfWidthOfMarkerWithBorder = (width + 2)/2;
+	var halfOfRectBorder = 1;
+	let rightMarkerPos = rect.width - (rectBorder) - (width + 2)/2 - halfOfRectBorder;
+	let sideMarkerTopPos = (rect.bottom - rect.top)/2 - height/2;
+
+
+	selectedDiv.innerHTML = "";
+
+	/*Left marker*/
+	selectedDiv.innerHTML += `<div onmousedown="selectBound(this)" creating="false" style="${boundingStyle} left: ${leftMarkerPos}px; top: ${ (rect.bottom - rect.top)/2 - height/2 }px"></div>`;
+
+	/*Right marker*/
+	selectedDiv.innerHTML += `<div onmousedown="selectBound(this)" style="${boundingStyle} left: ${rightMarkerPos}px; top: ${sideMarkerTopPos}px"></div>`;
+
+	/*Top marker*/
+	selectedDiv.innerHTML += `<div style="${boundingStyle} left: ${rightMarkerPos/2}px; top: ${-height/2}px"></div>`;
+
+	
+	/*Bottom marker*/
+	selectedDiv.innerHTML += `<div style="${boundingStyle} left: ${rightMarkerPos/2}px; top: ${rect.height-height/2}px"></div>`;
+}
+
+function changeSelectedDivBackground(colorInput){
+	selected.style.backgroundColor = colorInput.value;
+}
+
+</script>
+
+</html>
