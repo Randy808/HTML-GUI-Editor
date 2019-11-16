@@ -14,6 +14,15 @@ container = document.getElementById('html-canvas');// document.getElementsByTagN
 var selecting = false;
 var selectedType = "div";
 
+window.addEventListener("keydown", event => {
+	var fKeyCode = 70;
+	if (event.keyCode != fKeyCode) {
+	  return;
+	}
+	console.log("toggle");
+	container.classList.toggle("fullscreen-canvas");
+	redrawBoundingBox(selected);
+  });
 
 //on shift mouse down
 window.addEventListener("mousedown", (event) => {
@@ -26,11 +35,22 @@ window.addEventListener("mousedown", (event) => {
 	}
 		if(selecting && 
 			event.target.className.indexOf("createdElement") == -1){ 
+			debugger;
 			return deselect();
 		}
 });
 
+function getParentWithId(element, id){
+	if(element == null){
+		return null;
+	}
 
+	if(element.id.indexOf(id) != -1){
+		return element;
+	}
+
+	return getParentWithId(element.parentElement);
+}
 window.addEventListener("mouseup", () => {
 	if (creating) {
 		if(selectedType == "div"){
@@ -56,6 +76,7 @@ window.addEventListener("mousemove", (event) => {
 			moveTextOnCreation(event);
 		}
 	}
+	
 	if(resizing){
 		resizeDiv(event);
 	}
@@ -130,8 +151,6 @@ function deselect(){
 	selected.innerHTML = "";
 }
 
-
-
 function onDivMouseDown(el){
 
 	if( (event.target == el) != true)
@@ -148,11 +167,8 @@ function onDivMouseDown(el){
 }
 
 function selectBound(el){
-	
-	var parent = el.parentElement;
-
 	selectedBoundChanger = el;
-	pSelectedBoundChanger = parent;
+	pSelectedBoundChanger = el.parentElement;
 	resizing = true;
 	
 }
@@ -169,41 +185,110 @@ function moveBound(el){
 }
 
 function resizeDiv(event){
-	debugger;
-	var el = selectedBoundChanger;
-
-		var parent = pSelectedBoundChanger;// el.parentElement;
-		var pRect = parent.getBoundingClientRect();
-
-		let containerX = container.getBoundingClientRect().x + 1;
-		let containerY = container.getBoundingClientRect().y;
-
-		newX = event.clientX - containerX;     // Get the horizontal coordinate
+		var divBeingResized = pSelectedBoundChanger;
 		
-		newY = event.clientY - containerY;
+		if(selectedBoundChanger.id == "left-marker"){
+			var relativeEventCoordinates = GetRelativeEventCoordinates(event);
+			var divBeingResizedPos = divBeingResized.getBoundingClientRect();
 
-
-		console.log("RIGH: " + pRect.right);
-
-
+			divBeingResized.style.left = relativeEventCoordinates.x;
+			divBeingResized.style.width = getNewWidth(divBeingResizedPos, relativeEventCoordinates) + "px";
+		}
 		
-		//.right takes border into account, use pRect.left + parent.style.width.
-		//We subtract containerX beacause the bounding box of the div gets things relative to the whole page rather than relative to the 'html-canvas'
-		//USE CLIENT WIDTH because borders mess width calculations up
-		var right = pRect.left + parent.clientWidth - containerX;
-		debugger;
-		parent.style.width = (right - newX) + "px";
-		pRect = parent.getBoundingClientRect();
-		parent.style.left = newX;
+		if(selectedBoundChanger.id == "right-marker"){
+			var relativeEventCoordinates = GetRelativeEventCoordinates(event);
+			var divBeingResizedPos = divBeingResized.getBoundingClientRect();
 
-		redrawBoundingBox(parent);
+			var newWidth = getNewWidthForRightResize(divBeingResizedPos, relativeEventCoordinates);
+			var totalWidth = container.getBoundingClientRect().width;
+			divBeingResized.style.width = (newWidth/totalWidth*100) + "%";
+		}
+
+		if(selectedBoundChanger.id == "top-marker"){
+			var relativeEventCoordinates = GetRelativeEventCoordinates(event);
+			var divBeingResizedPos = divBeingResized.getBoundingClientRect();
+
+			divBeingResized.style.height = getNewHeight(divBeingResizedPos, relativeEventCoordinates) + "px";
+			divBeingResized.style.top = relativeEventCoordinates.y;
+		}
+
+		if(selectedBoundChanger.id == "bottom-marker"){
+			var relativeEventCoordinates = GetRelativeEventCoordinates(event);
+			var divBeingResizedPos = divBeingResized.getBoundingClientRect();
+
+			divBeingResized.style.height = getNewHeightForBottom(divBeingResizedPos, relativeEventCoordinates) + "px";
+			//divBeingResized.style.bottom = relativeEventCoordinates.y;
+		}
+
+		redrawBoundingBox(divBeingResized);
+}
+
+function getNewWidth(divBeingResizedPos, relativeEventCoordinates) {
+	var right = getRelativeRight(divBeingResizedPos);
+	return (right - relativeEventCoordinates.x);
+}
+
+function getNewHeight(divBeingResizedPos, relativeEventCoordinates) {
+	var bottom = getRelativeBottom(divBeingResizedPos);
+	//relative position should always be lower (+1) 
+	//or else it'll take the border into account and think the 
+	//height is bigger just because it's on the border
+	return (bottom - ( relativeEventCoordinates.y + 1));
+}
+
+function getNewHeightForBottom(divBeingResizedPos, relativeEventCoordinates) {
+	var top = getRelativeTop(divBeingResizedPos);
+	//relative position should always be lower (+1) 
+	//or else it'll take the border into account and think the 
+	//height is bigger just because it's on the border
+	console.log((relativeEventCoordinates.y) - top);
+	return ((relativeEventCoordinates.y) - top);
+}
+
+function getNewWidthForRightResize(divBeingResizedPos, relativeEventCoordinates) {
+	var left = getRelativeLeft(divBeingResizedPos);
+	return (relativeEventCoordinates.x - left);
+}
+
+function getRelativeRight(divBeingResizedPos) {
+	//+1 to remove 1px border from x coordinate.
+	return divBeingResizedPos.right - (container.getBoundingClientRect().x + 3);
+}
+
+function getRelativeLeft(divBeingResizedPos){
+	return divBeingResizedPos.left - container.getBoundingClientRect().x + 1;
+}
+
+function getRelativeTop(divBeingResizedPos){
+	var canvasBorder = 1;
+	var divBottomTopSize = 1;
+	var trueDivTop = divBeingResizedPos.top - divBottomTopSize;
+
+	return trueDivTop - 
+	(container.getBoundingClientRect().y + canvasBorder);
+}
+
+function getRelativeBottom(divBeingResizedPos){
+	var canvasBorder = 1;
+	var divBottomBorderSize = 1;
+	var trueDivBottom = divBeingResizedPos.bottom - divBottomBorderSize;
+
+	return trueDivBottom - 
+	(container.getBoundingClientRect().y + canvasBorder);
+}
+
+function GetRelativeEventCoordinates(event) {
+	let htmlCanvasPosition = container.getBoundingClientRect();
+	var relativeX = event.clientX - (htmlCanvasPosition.x + 1); // Get the horizontal coordinate
+	var relativeY = event.clientY - htmlCanvasPosition.y;
+	return { x: relativeX, y: relativeY };
 }
 
 function redrawBoundingBox(selectedDiv){
-	debugger;
+	
 	var rect = selectedDiv.getBoundingClientRect();
-	var height = 6;
-	var markerWidth = 6;
+	var height = 7;
+	var markerWidth = 7;
 
 	selectedDiv.innerHTML = "";
 
@@ -228,7 +313,9 @@ function redrawBoundingBox(selectedDiv){
 }
 
 function getLeftMarkerPos(width){
-	return -width/2 - 1;
+	var leftBorderWidth = 1;
+	var rightBorderWidth = 1;
+	return -width/2 - (leftBorderWidth + rightBorderWidth);
 }
 
 function getRightMarkerPos(rect, width){
@@ -246,7 +333,7 @@ function createMarkers(width,
 	/*Left marker*/
 	selectedDiv.innerHTML += `
 	<div onmousedown="selectBound(this)" 
-		creating="false" 
+		id="left-marker"
 		style="${boundingStyle} 
 			left: ${leftMarkerPos}px; 
 			top: ${getMarkerTopPosition(rect, height)}px">
@@ -255,6 +342,7 @@ function createMarkers(width,
 	/*Right marker*/
 	selectedDiv.innerHTML += `
 	<div onmousedown="selectBound(this)" 
+		id="right-marker"
 		style="${boundingStyle} 
 			left: ${rightMarkerPos}px; 
 			top: ${sideMarkerTopPos}px;">
@@ -262,14 +350,18 @@ function createMarkers(width,
 
 	/*Top marker*/
 	selectedDiv.innerHTML += `
-	<div style="${boundingStyle} 
+	<div id="top-marker"
+		onmousedown="selectBound(this)"
+		style="${boundingStyle} 
 			left: ${rightMarkerPos/2}px; 
 			top: ${-height/2}px">
 	</div>`;
 
 	/*Bottom marker*/
 	selectedDiv.innerHTML += `
-	<div style="${boundingStyle}
+	<div id="bottom-marker"
+		onmousedown="selectBound(this)"
+		style="${boundingStyle}
 			left: ${rightMarkerPos/2}px; 
 			top: ${rect.height-height/2}px">
 	</div>`;
@@ -279,9 +371,7 @@ function getMarkerTopPosition(rect, height) {
 	return (rect.bottom - rect.top) / 2 - height / 2;
 }
 
-function changeSelectedDivBackground(colorInput){
-	selected.style.backgroundColor = colorInput.value;
-}
+
 
 class DivEvents{
 	static moveDivOnCreation(event, selection) {
@@ -335,5 +425,9 @@ class DivEvents{
 				left: ${canvasCoordinates.x}px; 
 				top: ${canvasCoordinates.y}px">
 		</div>`);
+	}
+
+	static changeSelectedDivBackground(colorInput, selected){
+		selected.style.backgroundColor = colorInput.value;
 	}
 }
