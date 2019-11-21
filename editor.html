@@ -128,6 +128,19 @@
 		-ms-user-select: none;      
 		user-select: none;
 	}
+	.input-style{
+		background-color: rgba(0,0,0,0);
+		border: none;
+		width: 0px;
+		/*max-width:100px;*/
+		outline: none;
+		font-family: monospace;
+		font-size: 11px;
+		padding: 0px;
+	}
+	.input-style:focus{
+		box-shadow: 0px .6px 1px #B4B4B4;
+	}
 	</style>
 	<body style="margin: 0px;display: flex;flex-direction: column;">
 		<div class="top-bar-grad" style="flex: .06;display: flex;flex-direction: row; background-color: #EFEFEF;border-bottom: 1px solid #B4B4B4;justify-content: center; align-items: center;">
@@ -144,14 +157,13 @@
 			</div>
 
 			<div class="right-col no-select">
-				<div id="stylebar" class="flex-column" style="border-bottom: 1px solid #B4B4B4;flex:.5;">
+				<div id="stylebar" 
+					class="flex-column" 
+					style="border-bottom: 1px solid #B4B4B4;flex:.5;">
 					<p>
-						<b style="font-weight: bold; font-size: 11.5px; margin-left: 10px">Div</b>
+						<b style="font-weight: bold; font-size: 11.5px; margin-left: 10px">Styles</b>
 					</p>
-					<div style="margin-left: 15px">
-						<p>background color:</p>
-						<input type="text" name="" oninput="DivEvents.changeSelectedDivBackground(this)"></input>
-					</div>
+					
 				</div>
 				<div class="flex-column right-col-obj-lib">
 					<div class="element-option" >

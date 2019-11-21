@@ -35,7 +35,6 @@ window.addEventListener("mousedown", (event) => {
 	}
 		if(selecting && 
 			event.target.className.indexOf("createdElement") == -1){ 
-			debugger;
 			return deselect();
 		}
 });
@@ -371,7 +370,80 @@ function getMarkerTopPosition(rect, height) {
 	return (rect.bottom - rect.top) / 2 - height / 2;
 }
 
+var styleBar = document.getElementById("stylebar");
 
+styleBar.addEventListener("click", createStyle);
+
+function createStyle(event){
+	if(event.target != styleBar){
+		return;
+	}
+	console.log(`styleBar: ${styleBar}`);
+	console.log(event);
+
+	
+	var styleDiv = document.createElement("div");
+	var styleInput = getInput();
+	styleDiv.appendChild(styleInput);
+
+	var par = document.createElement("p");
+	par.style.display = "inline-block";
+	par.innerText = ":";
+	styleDiv.appendChild(par);
+	//insert colon
+
+	var styleInput2 = getInput();
+	styleInput2.id = "val";
+	styleDiv.appendChild(styleInput2);
+
+	styleBar.appendChild(styleDiv);
+
+	styleInput.focus();
+	//create-selection id so we can delete on mousedown if both input not there?
+	//////
+}
+
+function getInput(){
+ var input = document.createElement("input");
+ input.classList.add("input-style");
+ input.oninput = resizeInputToFitCharacters;
+ input.type = "text";
+ return input;
+}
+
+function resizeInputToFitCharacters(event){
+	var input = event.target;
+	console.log(event.target);
+	//input.style.width =  ((input.value.length)) + 'ch'
+	var s = document.createElement("p");
+	s.style.display = "inline";
+	s.style.opacity = 0;
+	s.style.fontFamily = "monospace"
+	s.style.fontSize = "11px"
+	document.getElementById("selection").appendChild(s)
+	s.innerText = input.value;
+	input.style.width =  s.getBoundingClientRect().width + "px";
+	//s.remove();
+
+	if(input.id == "val"){
+		debugger;
+		var a = input.parentElement;
+		var cssValue = a.children[0].value;
+		var final = camelCase(cssValue);
+		selected.style[final] = input.value;
+	}
+}
+
+function camelCase(cssValue){
+	var arr = cssValue.split('-');
+	for(let i = 1 ; i < arr.length ; i++){
+		arr[i] = capitalizeFirstLetter(arr[i])
+	}
+	return arr.join('');
+}
+function capitalizeFirstLetter(s){
+	return `${s[0].toUpperCase()}${s.substr(1)}`;
+}
 
 class DivEvents{
 	static moveDivOnCreation(event, selection) {
